@@ -1,4 +1,4 @@
-# HOIP Prediction Tool
+# HOIPs Deep Spin Splitting Prediction Tool
 
 This is a deep learning model with executable python scripts which uses the model to predict the spin splitting.
 
