@@ -168,7 +168,7 @@ def load_data(input_path):
         raise FileNotFoundError(f"input file '{input_path}' not found")
     
     print(f"loading input data: {input_path}")
-    data = pd.read_csv(input_path)
+    data = pd.read_csv(input_path, header=None)
     print(f"data loaded successfully, {len(data)} rows")
     return data
 
@@ -238,4 +238,4 @@ def main():
     return 0
 
 if __name__ == "__main__":
-    exit(main()) 
+    exit(main())
