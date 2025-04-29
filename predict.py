@@ -120,6 +120,8 @@ def parse_args():
     parser.add_argument('--model', type=str, required=True, help='PyTorch model file path(.pth)')
     parser.add_argument('--input', type=str, required=True, help='input CSV file path')
     parser.add_argument('--output', type=str, default='predictions.csv', help='output CSV file path')
+    parser.add_argument('--model_type', type=str, default='default', choices=['default', 'PbI', 'PbBr', 'PbCl', 'SnI'], 
+                       help='model type to use (default uses best_model.pth in current directory)')
     return parser.parse_args()
 
 def load_model(model_path, input_length=20):
@@ -216,8 +218,28 @@ def main():
     args = parse_args()
     
     try:
+        # 根据model_type决定使用哪个模型
+        model_path = args.model
+        if args.model_type != 'default':
+            model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+            model_type_map = {
+                'PbI': 'modelPbI',
+                'PbBr': 'modelPbBr',
+                'PbCl': 'modelPbCl',
+                'SnI': 'modelSnI'
+            }
+            if args.model_type in model_type_map:
+                model_subdir = model_type_map[args.model_type]
+                # 查找该目录下的best_model文件
+                model_files = [f for f in os.listdir(os.path.join(model_dir, model_subdir)) if f.startswith('best_model') and f.endswith('.pth')]
+                if model_files:
+                    model_path = os.path.join(model_dir, model_subdir, model_files[0])
+                    print(f"Using {args.model_type} model: {model_path}")
+                else:
+                    print(f"No model file found for type {args.model_type}, using default model.")
+        
         # load model
-        model, device = load_model(args.model)
+        model, device = load_model(model_path)
         
         # load and preprocess data
         data = load_data(args.input)

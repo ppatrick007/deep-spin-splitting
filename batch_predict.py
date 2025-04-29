@@ -14,6 +14,8 @@ def parse_args():
     parser.add_argument('--geometrydir', type=str, required=True, help='Directory containing geometry.in files')
     parser.add_argument('--output', type=str, default='predictions.csv', help='Output CSV file path')
     parser.add_argument('--csvoutput', type=str, default='X.csv', help='Feature output CSV file path')
+    parser.add_argument('--model_type', type=str, default='default', choices=['default', 'PbI', 'PbBr', 'PbCl', 'SnI'], 
+                       help='model type to use (default uses best_model.pth in current directory)')
     return parser.parse_args()
 
 def find_geometry_files(directory):
@@ -92,6 +94,26 @@ def main():
     args = parse_args()
     
     try:
+        # 根据model_type决定使用哪个模型
+        model_path = args.model
+        if args.model_type != 'default':
+            model_dir = os.path.join(os.path.dirname(os.path.abspath(__file__)), 'models')
+            model_type_map = {
+                'PbI': 'modelPbI',
+                'PbBr': 'modelPbBr',
+                'PbCl': 'modelPbCl',
+                'SnI': 'modelSnI'
+            }
+            if args.model_type in model_type_map:
+                model_subdir = model_type_map[args.model_type]
+                # 查找该目录下的best_model文件
+                model_files = [f for f in os.listdir(os.path.join(model_dir, model_subdir)) if f.startswith('best_model') and f.endswith('.pth')]
+                if model_files:
+                    model_path = os.path.join(model_dir, model_subdir, model_files[0])
+                    print(f"Using {args.model_type} model: {model_path}")
+                else:
+                    print(f"No model file found for type {args.model_type}, using default model.")
+        
         # Find all geometry.in files
         print(f"Finding geometry.in files...")
         geometry_files = find_geometry_files(args.geometrydir)
@@ -110,7 +132,7 @@ def main():
         
         # Run prediction
         print("Running prediction...")
-        result = run_prediction(args.model, csv_path, args.output)
+        result = run_prediction(model_path, csv_path, args.output)
         
         if result == 0:
             print(f"Batch processing completed! Prediction results saved to: {args.output}")
